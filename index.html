@@ -1,0 +1,290 @@
+<!DOCTYPE html>
+<html lang="my">
+<head>
+    <meta charset="UTF-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0">
+    <title>Empty Speak - Microsoft Edge TTS Studio</title>
+    <script src="https://cdn.tailwindcss.com"></script>
+    <link rel="stylesheet" href="https://cdnjs.cloudflare.com/ajax/libs/font-awesome/6.4.0/css/all.min.css">
+</head>
+<body class="bg-slate-950 text-slate-100 min-h-screen font-sans antialiased flex flex-col justify-between">
+    <!-- Header -->
+    <header class="border-b border-slate-800 bg-slate-900/50 backdrop-blur sticky top-0 z-50 px-6 py-4 flex items-center justify-between">
+        <div class="flex items-center space-x-3">
+            <div class="bg-indigo-600 p-2 rounded-xl text-white">
+                <i class="fa-solid fa-microphone-lines text-xl"></i>
+            </div>
+            <div>
+                <h1 class="font-bold text-lg tracking-wide flex items-center gap-2">
+                    Empty Speak <span class="text-xs bg-indigo-500/20 text-indigo-400 px-2 py-0.5 rounded-full border border-indigo-500/30">PRO TTS</span>
+                </h1>
+                <p class="text-xs text-slate-400">Microsoft Edge Neural Voice Studio</p>
+            </div>
+        </div>
+        <div class="flex items-center gap-3">
+            <span class="inline-flex items-center gap-1.5 px-3 py-1 rounded-full text-xs font-medium bg-emerald-500/10 text-emerald-400 border border-emerald-500/20">
+                <span class="w-2 h-2 rounded-full bg-emerald-400 animate-pulse"></span> Backend Connected
+            </span>
+        </div>
+    </header>
+
+    <!-- Main Content -->
+    <main class="max-w-7xl mx-auto w-full p-6 grid grid-cols-1 lg:grid-cols-3 gap-6 my-auto">
+        <!-- Left & Center: Input & Voices -->
+        <div class="lg:col-span-2 space-y-6">
+            <!-- Text Input Card -->
+            <div class="bg-slate-900/80 border border-slate-800 rounded-2xl p-5 shadow-xl">
+                <div class="flex justify-between items-center mb-3">
+                    <label class="text-sm font-semibold text-slate-300 flex items-center gap-2">
+                        <i class="fa-solid fa-pen-nib text-indigo-400"></i> Input Text (Myanmar & English)
+                    </label>
+                    <span id="charCount" class="text-xs text-slate-500">0 characters</span>
+                </div>
+                <textarea id="textInput" rows="5" class="w-full bg-slate-950 border border-slate-800 rounded-xl p-4 text-slate-200 placeholder-slate-600 focus:outline-none focus:border-indigo-500 transition resize-none text-sm leading-relaxed" placeholder="မင်္ဂလာပါ Empty Speak မှ ကြိုဆိုပါတယ်။ Enter text in Myanmar or English here..."></textarea>
+                
+                <div class="flex flex-wrap items-center justify-between gap-3 mt-3 pt-3 border-t border-slate-800/60">
+                    <div class="flex gap-2">
+                        <button onclick="setSampleText('mm')" class="text-xs bg-slate-800 hover:bg-slate-700 text-slate-300 px-3 py-1.5 rounded-lg transition border border-slate-700">မြန်မာ နမူနာ</button>
+                        <button onclick="setSampleText('en')" class="text-xs bg-slate-800 hover:bg-slate-700 text-slate-300 px-3 py-1.5 rounded-lg transition border border-slate-700">English Sample</button>
+                    </div>
+                    <button onclick="clearText()" class="text-xs text-slate-400 hover:text-red-400 transition flex items-center gap-1.5">
+                        <i class="fa-solid fa-trash-can"></i> Clear
+                    </button>
+                </div>
+            </div>
+
+            <!-- Voice Selection Card -->
+            <div class="bg-slate-900/80 border border-slate-800 rounded-2xl p-5 shadow-xl">
+                <div class="flex flex-col sm:flex-row justify-between items-start sm:items-center gap-3 mb-4">
+                    <label class="text-sm font-semibold text-slate-300 flex items-center gap-2">
+                        <i class="fa-solid fa-users-viewfinder text-indigo-400"></i> Select Neural Voice
+                    </label>
+                    <input type="text" id="voiceSearch" oninput="filterVoices()" placeholder="Search voices..." class="bg-slate-950 border border-slate-800 rounded-lg px-3 py-1.5 text-xs text-slate-200 placeholder-slate-600 focus:outline-none focus:border-indigo-500 w-full sm:w-48">
+                </div>
+
+                <!-- Voice Categories -->
+                <div class="flex gap-2 mb-4 overflow-x-auto pb-2 border-b border-slate-800">
+                    <button onclick="filterCategory('all')" class="voice-tab active text-xs px-3 py-1.5 rounded-lg bg-indigo-600 text-white font-medium transition whitespace-nowrap">All Voices</button>
+                    <button onclick="filterCategory('mm')" class="voice-tab text-xs px-3 py-1.5 rounded-lg bg-slate-800 text-slate-400 hover:text-white transition whitespace-nowrap">MM Myanmar</button>
+                    <button onclick="filterCategory('en-US')" class="voice-tab text-xs px-3 py-1.5 rounded-lg bg-slate-800 text-slate-400 hover:text-white transition whitespace-nowrap">US US English</button>
+                    <button onclick="filterCategory('en-GB')" class="voice-tab text-xs px-3 py-1.5 rounded-lg bg-slate-800 text-slate-400 hover:text-white transition whitespace-nowrap">GB UK English</button>
+                </div>
+
+                <!-- Voice List -->
+                <div id="voiceList" class="space-y-2 max-h-60 overflow-y-auto pr-1">
+                    <!-- Populated by JS -->
+                </div>
+            </div>
+        </div>
+
+        <!-- Right: Parameters & Action -->
+        <div class="space-y-6 flex flex-col">
+            <div class="bg-slate-900/80 border border-slate-800 rounded-2xl p-5 shadow-xl flex-1 flex flex-col justify-between space-y-6">
+                <div class="space-y-5">
+                    <h2 class="text-sm font-semibold text-slate-300 flex items-center gap-2 border-b border-slate-800 pb-3">
+                        <i class="fa-solid fa-sliders text-indigo-400"></i> Speech Parameters
+                    </h2>
+
+                    <!-- Speed Slider -->
+                    <div class="space-y-2">
+                        <div class="flex justify-between text-xs">
+                            <span class="text-slate-400">Speed (Rate)</span>
+                            <span id="rateVal" class="text-indigo-400 font-mono">+0%</span>
+                        </div>
+                        <input type="range" id="rateRange" min="-50" max="100" value="0" step="5" oninput="updateVal('rate')" class="w-full accent-indigo-600 bg-slate-950 rounded-lg cursor-pointer">
+                    </div>
+
+                    <!-- Pitch Slider -->
+                    <div class="space-y-2">
+                        <div class="flex justify-between text-xs">
+                            <span class="text-slate-400">Pitch</span>
+                            <span id="pitchVal" class="text-indigo-400 font-mono">+0Hz</span>
+                        </div>
+                        <input type="range" id="pitchRange" min="-20" max="20" value="0" step="1" oninput="updateVal('pitch')" class="w-full accent-indigo-600 bg-slate-950 rounded-lg cursor-pointer">
+                    </div>
+
+                    <!-- Volume Slider -->
+                    <div class="space-y-2">
+                        <div class="flex justify-between text-xs">
+                            <span class="text-slate-400">Volume</span>
+                            <span id="volumeVal" class="text-indigo-400 font-mono">+0%</span>
+                        </div>
+                        <input type="range" id="volumeRange" min="-50" max="50" value="0" step="5" oninput="updateVal('volume')" class="w-full accent-indigo-600 bg-slate-950 rounded-lg cursor-pointer">
+                    </div>
+                </div>
+
+                <!-- Generate & Audio Output -->
+                <div class="space-y-4 pt-4 border-t border-slate-800">
+                    <button id="generateBtn" onclick="generateSpeech()" class="w-full bg-gradient-to-r from-indigo-600 to-violet-600 hover:from-indigo-500 hover:to-violet-500 text-white font-medium py-3.5 px-4 rounded-xl shadow-lg shadow-indigo-600/20 transition flex items-center justify-center gap-2 text-sm">
+                        <i class="fa-solid fa-wand-magic-sparkles"></i> Generate Speech
+                    </button>
+
+                    <div id="audioContainer" class="hidden space-y-3 p-3 bg-slate-950 border border-slate-800 rounded-xl">
+                        <audio id="audioPlayer" controls class="w-full h-10"></audio>
+                        <a id="downloadBtn" download="empty-speak.mp3" class="w-full bg-slate-800 hover:bg-slate-700 text-slate-200 text-xs py-2.5 rounded-lg flex items-center justify-center gap-2 transition font-medium border border-slate-700">
+                            <i class="fa-solid fa-download text-indigo-400"></i> Download Audio (MP3)
+                        </a>
+                    </div>
+                </div>
+            </div>
+        </div>
+    </main>
+
+    <!-- Footer -->
+    <footer class="border-t border-slate-800 py-4 text-center text-xs text-slate-500">
+        Empty Speak Pro TTS • Powered by Microsoft Edge Neural Voices & Vercel Serverless
+    </footer>
+
+    <!-- Script -->
+    <script>
+        const voices = [
+            { id: 'my-MM-NilarNeural', name: 'Nilar (Neural)', lang: 'mm', gender: 'Female', desc: 'my-MM-NilarNeural' },
+            { id: 'my-MM-ThihaNeural', name: 'Thiha (Neural)', lang: 'mm', gender: 'Male', desc: 'my-MM-ThihaNeural' },
+            { id: 'en-US-AriaNeural', name: 'Aria (US)', lang: 'en-US', gender: 'Female', desc: 'en-US-AriaNeural' },
+            { id: 'en-US-GuyNeural', name: 'Guy (US)', lang: 'en-US', gender: 'Male', desc: 'en-US-GuyNeural' },
+            { id: 'en-US-JennyNeural', name: 'Jenny (US)', lang: 'en-US', gender: 'Female', desc: 'en-US-JennyNeural' },
+            { id: 'en-US-SteffanNeural', name: 'Steffan (US)', lang: 'en-US', gender: 'Male', desc: 'en-US-SteffanNeural' },
+            { id: 'en-GB-SoniaNeural', name: 'Sonia (UK)', lang: 'en-GB', gender: 'Female', desc: 'en-GB-SoniaNeural' },
+            { id: 'en-GB-RyanNeural', name: 'Ryan (UK)', lang: 'en-GB', gender: 'Male', desc: 'en-GB-RyanNeural' }
+        ];
+
+        let selectedVoice = 'my-MM-NilarNeural';
+        let currentCategory = 'all';
+
+        function renderVoices(filter = '') {
+            const list = document.getElementById('voiceList');
+            list.innerHTML = '';
+            
+            const filtered = voices.filter(v => {
+                const matchesCategory = currentCategory === 'all' || v.lang === currentCategory;
+                const matchesSearch = v.name.toLowerCase().includes(filter.toLowerCase()) || v.desc.toLowerCase().includes(filter.toLowerCase());
+                return matchesCategory && matchesSearch;
+            });
+
+            if (filtered.length === 0) {
+                list.innerHTML = '<p class="text-xs text-slate-500 text-center py-4">No voices found.</p>';
+                return;
+            }
+
+            filtered.forEach(v => {
+                const isSelected = selectedVoice === v.id;
+                const div = document.createElement('div');
+                div.className = `p-3 rounded-xl border cursor-pointer transition flex items-center justify-between ${isSelected ? 'bg-indigo-600/10 border-indigo-500 text-white' : 'bg-slate-950 border-slate-800 text-slate-300 hover:border-slate-700'}`;
+                div.onclick = () => {
+                    selectedVoice = v.id;
+                    renderVoices(document.getElementById('voiceSearch').value);
+                };
+                div.innerHTML = `
+                    <div class="flex items-center gap-3">
+                        <div class="w-7 h-7 rounded-lg ${isSelected ? 'bg-indigo-600 text-white' : 'bg-slate-800 text-slate-400'} flex items-center justify-center text-xs font-bold">
+                            ${v.lang.startsWith('my') ? 'MM' : 'US'}
+                        </div>
+                        <div>
+                            <p class="text-xs font-semibold">${v.name}</p>
+                            <p class="text-[10px] text-slate-500">${v.desc}</p>
+                        </div>
+                    </div>
+                    <span class="text-[10px] px-2 py-0.5 rounded-full ${v.gender === 'Female' ? 'bg-pink-500/10 text-pink-400 border border-pink-500/20' : 'bg-blue-500/10 text-blue-400 border border-blue-500/20'}">${v.gender}</span>
+                `;
+                list.appendChild(div);
+            });
+        }
+
+        function filterCategory(cat) {
+            currentCategory = cat;
+            document.querySelectorAll('.voice-tab').forEach(btn => {
+                btn.classList.remove('bg-indigo-600', 'text-white', 'font-medium');
+                btn.classList.add('bg-slate-800', 'text-slate-400');
+            });
+            event.target.classList.remove('bg-slate-800', 'text-slate-400');
+            event.target.classList.add('bg-indigo-600', 'text-white', 'font-medium');
+            renderVoices(document.getElementById('voiceSearch').value);
+        }
+
+        function filterVoices() {
+            const query = document.getElementById('voiceSearch').value;
+            renderVoices(query);
+        }
+
+        function updateVal(type) {
+            const val = document.getElementById(type + 'Range').value;
+            const formatted = val > 0 ? `+${val}` : val;
+            document.getElementById(type + 'Val').innerText = formatted + (type === 'pitch' ? 'Hz' : '%');
+        }
+
+        function setSampleText(lang) {
+            const input = document.getElementById('textInput');
+            if (lang === 'mm') {
+                input.value = 'မင်္ဂလာပါ၊ Empty Speak မှ ကြိုဆိုပါတယ်။ ဤဆော့ဖ်ဝဲသည် Microsoft Edge ၏ အသံထွက်အစစ်အမှန်များကို အသုံးပြုထားပါသည်။';
+            } else {
+                input.value = 'Hello! Welcome to Empty Speak. This application uses high quality Microsoft Edge neural voices.';
+            }
+            updateCharCount();
+        }
+
+        function clearText() {
+            document.getElementById('textInput').value = '';
+            updateCharCount();
+        }
+
+        const textInput = document.getElementById('textInput');
+        textInput.oninput = updateCharCount;
+
+        function updateCharCount() {
+            const len = textInput.value.length;
+            document.getElementById('charCount').innerText = `${len} characters`;
+        }
+
+        async function generateSpeech() {
+            const text = textInput.value.trim();
+            if (!text) {
+                alert('ကျေးဇူးပြု၍ စာသားအနည်းငယ် ရိုက်ထည့်ပါ။');
+                return;
+            }
+
+            const btn = document.getElementById('generateBtn');
+            const originalText = btn.innerHTML;
+            btn.disabled = true;
+            btn.innerHTML = `<i class="fa-solid fa-spinner animate-spin"></i> Generating Audio...`;
+
+            const rate = document.getElementById('rateRange').value + '%';
+            const pitch = document.getElementById('pitchRange').value + 'Hz';
+            const volume = document.getElementById('volumeRange').value + '%';
+
+            try {
+                const response = await fetch('/api/tts', {
+                    method: 'POST',
+                    headers: { 'Content-Type': 'application/json' },
+                    body: JSON.stringify({
+                        text: text,
+                        voice: selectedVoice,
+                        rate: rate,
+                        pitch: pitch,
+                        volume: volume
+                    })
+                });
+
+                if (!response.ok) {
+                    throw new Error('Server error occurred.');
+                }
+
+                const blob = await response.blob();
+                const url = URL.createObjectURL(blob);
+
+                const player = document.getElementById('audioPlayer');
+                player.src = url;
+                document.getElementById('audioContainer').classList.remove('hidden');
+                document.getElementById('downloadBtn').href = url;
+                player.play();
+            } catch (err) {
+                alert('Connection Error: Server သို့ ချိတ်ဆက်၍မရပါ။ /api/tts endpoint သို့ ချိတ်ဆက်ရာတွင် အမှားဖြစ်သွားပါသည်။');
+            } finally {
+                btn.disabled = false;
+                btn.innerHTML = originalText;
+            }
+        }
+
+        renderVoices();
+    </script>
+</body>
+</html>
